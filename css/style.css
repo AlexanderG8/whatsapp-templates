@@ -1,0 +1,18 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f7f7;
+}
+.template-card {
+    transition: all 0.3s ease;
+}
+.template-card:hover {
+    transform: translateY(-4px);
+}
+.notification {
+    transform: translateY(100%);
+    transition: all 0.3s ease;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.notification.show {
+    transform: translateY(0);
+}
