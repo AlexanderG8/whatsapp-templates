@@ -2,6 +2,10 @@ function createStore(initialState = []){
     // Estado interno de la función
     let state = initialState; // por defecto es un []
 
+    // Para guardar la última plantilla eliminada
+    let lastDeletedTemplate = null;
+    let lastDeletedIndex = -1;
+
     // Listeners es un arreglo que se ejecuta cuando el estado cambia
     const listeners = [];
 
@@ -28,8 +32,21 @@ function createStore(initialState = []){
         setState(newState);
     }
 
+    function updateTemplate(index, updateTemplate){
+        // Creamos una copia del estado actual
+        const newState = [...state];
+        // Actualizamos la plantilla en el nuevo estado
+        newState[index] = updateTemplate;
+        // Actualizamos el estado
+        setState(newState);
+    }
+
     // Función para eliminar una plantilla según su índice
     function removeTemplate(index) {
+        // Guardar la plantilla antes de eliminarla
+        lastDeletedTemplate = state[index];
+        lastDeletedIndex = index;
+
         // Crear una copia del array sin la plantilla a eliminar
         const newState = state.filter((_, i) => i !== index);
         setState(newState);
@@ -37,8 +54,42 @@ function createStore(initialState = []){
 
     // Función para resetear todas las plantillas
     function resetTemplates(){
+        // Guardar última copia antes de resetear
+        if(state.length > 0){
+            lastDeletedTemplate =null;
+            lastDeletedIndex = -1;
+        }
         // Crea un nuevo estado vacío
         setState([]);
+    }
+
+    // Función para recuperar la última plantilla eliminada
+    function recoverLastTemplate() {
+        if (lastDeletedTemplate === null) {
+            return false; // No hay plantilla para recuperar
+        }
+
+        // Si tenemos el índice original, intentamos insertar en la misma posición
+        if (lastDeletedIndex >= 0 && lastDeletedIndex <= state.length) {
+            const newState = [...state];
+            newState.splice(lastDeletedIndex, 0, lastDeletedTemplate);
+            setState(newState);
+        } else {
+            // Si no, añadimos al final
+            addTemplate(lastDeletedTemplate);
+        }
+
+        // Limpiar la plantilla recuperada
+        const recoveredTemplate = lastDeletedTemplate;
+        lastDeletedTemplate = null;
+        lastDeletedIndex = -1;
+
+        return recoveredTemplate;
+    }
+
+    // Verificar si hay una plantilla que se pueda recuperar
+    function hasRecoverableTemplate() {
+        return lastDeletedTemplate !== null;
     }
 
     function suscribe(listener){
@@ -77,7 +128,10 @@ function createStore(initialState = []){
         initializeStore,
         suscribe,
         removeTemplate,
-        resetTemplates
+        resetTemplates,
+        updateTemplate,
+        recoverLastTemplate,
+        hasRecoverableTemplate
     }
 }
 
