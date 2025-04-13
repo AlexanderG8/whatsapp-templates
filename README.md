@@ -1,6 +1,7 @@
 # WhatsApp Templates
 
 ## Descripción del Proyecto
+
 Este proyecto implementa una aplicación de gestión de plantillas para WhatsApp, permitiendo visualizar las plantillas en diferentes formatos (grilla o lista).
 
 ## Documentación Técnica
@@ -185,6 +186,7 @@ La clase `Template` es un componente fundamental que encapsula toda la lógica r
 Crea una nueva instancia de la clase Template con los valores proporcionados para cada propiedad.
 
 **Parámetros:**
+
 - `title` (String): Título de la plantilla
 - `message` (String): Contenido del mensaje
 - `hashTag` (String): Etiquetas o hashtags asociados
@@ -202,13 +204,16 @@ Guarda la instancia actual de la plantilla en el array global `templates`. Este 
 Renderiza la plantilla en el DOM dentro del contenedor de plantillas. Este método es responsable de crear y estructurar los elementos HTML necesarios para visualizar la plantilla según el modo de vista especificado.
 
 **Parámetros:**
+
 - `viewMode` (String, opcional): Modo de visualización ('grid' o 'list'). El valor por defecto es 'grid'.
 
 **Comportamiento:**
+
 - En modo **grilla** (`grid`): Las plantillas se muestran en un formato de tarjeta vertical con todos los elementos apilados.
 - En modo **lista** (`list`): Las plantillas se muestran en un formato horizontal optimizado para visualización tipo lista, con una distribución de elementos reorganizada para aprovechar mejor el espacio horizontal.
 
 **Funcionalidades:**
+
 - Ajusta las clases CSS y estructura del DOM según el modo de visualización
 - Aplica estilos responsive para adaptarse a diferentes tamaños de pantalla
 - Implementa efectos visuales como sombras y transiciones para mejorar la experiencia de usuario
@@ -236,3 +241,63 @@ Este estado se utiliza para determinar cómo renderizar las plantillas y qué es
 7. **UI Moderna**: Utiliza Tailwind CSS para una interfaz moderna y atractiva
 8. **Recuperación de Plantillas**: Permite recuperar la última plantilla eliminada
 9. **Persistencia Local**: Guarda las plantillas automáticamente en el navegador
+
+## Historias de Usuarios Propuestas
+
+### HU1: Búsqueda y Filtrado de Plantillas
+
+- Como usuario, quiero poder buscar y filtrar mis plantillas por título, mensaje o hashtags para encontrar rápidamente la plantilla que necesito cuando tengo muchas guardadas.
+
+**Criterios de Aceptación:**
+
+1. Implementar una barra de búsqueda en la parte superior de la lista de plantillas.
+2. La búsqueda debe ser en tiempo real, filtrando las plantillas a medida que el usuario escribe.
+3. Debe buscar coincidencias en título, mensaje y hashtags de las plantillas.
+4. Mostrar un mensaje claro cuando no hay resultados de búsqueda.
+5. Mantener la funcionalidad de cambio entre vista de grilla y lista durante la búsqueda.
+6. La búsqueda debe ser insensible a mayúsculas/minúsculas y acentos.
+
+### HU2: Categorización de Plantillas con Etiquetas Personalizadas
+
+- Como usuario, quiero poder asignar etiquetas personalizadas a mis plantillas y filtrarlas por estas etiquetas para organizar mejor mi colección según diferentes contextos o usos.
+
+**Criterios de Aceptación:**
+
+1. Agregar un campo para etiquetas múltiples en el formulario de creación/edición de plantillas.
+2. Permitir al usuario crear etiquetas nuevas o seleccionar de las existentes.
+3. Mostrar las etiquetas asignadas en cada tarjeta de plantilla con un diseño distintivo.
+4. Implementar un selector de filtro por etiquetas en la barra superior.
+5. Al seleccionar una etiqueta, mostrar sólo las plantillas que la contienen.
+6. Permitir la selección múltiple de etiquetas para filtrado combinado (Y/O).
+7. Mantener la persistencia de las etiquetas junto con las plantillas en localStorage.
+8. Las etiquetas deben tener un límite de caracteres razonable (máximo 15 caracteres).
+
+## Historias de Usuarios Propuestas
+
+### HU1: Búsqueda y Filtrado de Plantillas
+
+- Como usuario, quiero poder buscar y filtrar mis plantillas por título, mensaje o hashtags para encontrar rápidamente la plantilla que necesito cuando tengo muchas guardadas.
+
+**Criterios de Aceptación:**
+
+1. Implementar una barra de búsqueda en la parte superior de la lista de plantillas.
+2. La búsqueda debe ser en tiempo real, filtrando las plantillas a medida que el usuario escribe.
+3. Debe buscar coincidencias en título, mensaje y hashtags de las plantillas.
+4. Mostrar un mensaje claro cuando no hay resultados de búsqueda.
+5. Mantener la funcionalidad de cambio entre vista de grilla y lista durante la búsqueda.
+6. La búsqueda debe ser insensible a mayúsculas/minúsculas y acentos.
+
+### HU2: Categorización de Plantillas con Etiquetas Personalizadas
+
+- Como usuario, quiero poder asignar etiquetas personalizadas a mis plantillas y filtrarlas por estas etiquetas para organizar mejor mi colección según diferentes contextos o usos.
+
+**Criterios de Aceptación:**
+
+1. Agregar un campo para etiquetas múltiples en el formulario de creación/edición de plantillas.
+2. Permitir al usuario crear etiquetas nuevas o seleccionar de las existentes.
+3. Mostrar las etiquetas asignadas en cada tarjeta de plantilla con un diseño distintivo.
+4. Implementar un selector de filtro por etiquetas en la barra superior.
+5. Al seleccionar una etiqueta, mostrar sólo las plantillas que la contienen.
+6. Permitir la selección múltiple de etiquetas para filtrado combinado (Y/O).
+7. Mantener la persistencia de las etiquetas junto con las plantillas en localStorage.
+8. Las etiquetas deben tener un límite de caracteres razonable (máximo 15 caracteres).
