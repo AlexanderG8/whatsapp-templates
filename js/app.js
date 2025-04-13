@@ -6,6 +6,7 @@ const btnNewTemplate = document.querySelector("#new-template");
 const emptyState = document.querySelector("#empty-state");
 const notification = document.querySelector("#notification");
 const notificationMessage = document.querySelector("#notification-message");
+const btnResetTemplates = document.querySelector("#reset-templates");
 
 // Estado de la aplicación
 const appState = {
@@ -55,6 +56,18 @@ function handleDeleteTemplate(index) {
         
         // Mostrar notificación
         showNotification("Plantilla eliminada con éxito");
+    }
+}
+
+// Función para resetear todas las plantillas
+function resetearPlantillas(){
+    if (confirm("¿Estás seguro de que deseas eliminar todas las plantillas?")) {
+        // Resetear plantillas
+        window.templateStore.resetTemplates();
+        // Limpiar localStorage
+        clearTemplatesStorage();
+        // Mostrar notificación
+        showNotification("Todas las plantillas han sido eliminadas");
     }
 }
 
@@ -211,6 +224,7 @@ function switchToListView() {
 
 // Suscribir la función renderTemplates al store para que se ejecute cuando cambie el estado
 window.templateStore.suscribe(renderTemplates);
+window.templateStore.suscribe(saveTemplates);
 
 // Inicializar la store y configurar los event listeners cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", function () {
@@ -218,4 +232,5 @@ document.addEventListener("DOMContentLoaded", function () {
     // Event listeners
     gridViewButton.addEventListener('click', switchToGridView);
     listViewButton.addEventListener('click', switchToListView);
+    btnResetTemplates.addEventListener('click', resetearPlantillas);
 });

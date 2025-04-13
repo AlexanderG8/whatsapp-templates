@@ -29,11 +29,17 @@ function createStore(initialState = []){
     }
 
     // Función para eliminar una plantilla según su índice
-function removeTemplate(index) {
-    // Crear una copia del array sin la plantilla a eliminar
-    const newState = state.filter((_, i) => i !== index);
-    setState(newState);
-}
+    function removeTemplate(index) {
+        // Crear una copia del array sin la plantilla a eliminar
+        const newState = state.filter((_, i) => i !== index);
+        setState(newState);
+    }
+
+    // Función para resetear todas las plantillas
+    function resetTemplates(){
+        // Crea un nuevo estado vacío
+        setState([]);
+    }
 
     function suscribe(listener){
         listeners.push(listener);
@@ -47,23 +53,21 @@ function removeTemplate(index) {
     }
 
     function initializeStore(){
-        const newTemplate = [
-            new Template(
-                "Bienvenido",
-                "Hola, bienvenido al curso de JS",
-                "#hash1, #hash2, #hash3",
-                "link1",
-                "date1"
-            ),
-            new Template(
-                "Bienvenido",
-                "Hola, bienvenido al curso de JS",
-                "#hash1, #hash2, #hash3",
-                "link1",
-                "date1"
+        // Obtengo los templates de mi localStorage y lo deserealizo con JSON.parse()
+        const templates = localStorage.getItem("templates");
+        const newTemplate = templates === null ? [] : JSON.parse(templates);
+        // Realizo una reinstanciación
+        const mappedTemplates = newTemplate.map(function(newTemplate){
+            return new Template(
+                newTemplate.title,
+                newTemplate.message,
+                newTemplate.hashTag,
+                newTemplate.link,
+                newTemplate.date
             )
-        ];
-        setState(newTemplate);
+        });
+
+        setState(mappedTemplates);
     }
 
     return{
@@ -72,7 +76,8 @@ function removeTemplate(index) {
         addTemplate,
         initializeStore,
         suscribe,
-        removeTemplate
+        removeTemplate,
+        resetTemplates
     }
 }
 
