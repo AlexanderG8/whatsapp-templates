@@ -105,6 +105,65 @@ La inmutabilidad implementada en este patrón Store proporciona varios beneficio
 - **Facilita Testing**: Hace que las pruebas sean más predecibles al trabajar con estados inmutables
 - **Compatibilidad con Herramientas de Desarrollo**: Permite implementar funcionalidades como time-travel debugging
 
+### Sincronización y Persistencia de Datos
+
+La aplicación implementa un sistema de persistencia que permite guardar automáticamente las plantillas en el navegador del usuario, haciendo que estén disponibles incluso después de cerrar y volver a abrir la aplicación.
+
+#### Funcionamiento de la Persistencia
+
+```javascript
+/**
+ * Función que guarda las plantillas en el localStorage
+ */
+function saveTemplates() {
+  localStorage.setItem(
+    "templates",
+    JSON.stringify(window.templateStore.getState())
+  );
+}
+
+/**
+ * Función que limpia las plantillas del localStorage
+ */
+function clearTemplatesStorage() {
+  localStorage.removeItem("templates");
+}
+```
+
+#### Características Principales
+
+1. **Almacenamiento Local**: Se utiliza el API `localStorage` del navegador para guardar las plantillas directamente en el dispositivo del usuario.
+
+2. **Sincronización Automática**: Mediante el sistema de suscripción del Store, cada vez que cambia el estado, las plantillas se guardan automáticamente:
+
+   ```javascript
+   // Suscribir la función saveTemplates al store
+   window.templateStore.suscribe(saveTemplates);
+   ```
+
+3. **Restauración al Iniciar**: Cuando la aplicación se carga, verifica si existen plantillas guardadas y las restaura:
+
+   ```javascript
+   // Al iniciar la aplicación
+   document.addEventListener("DOMContentLoaded", function() {
+     // Cargar plantillas guardadas si existen
+     const savedTemplates = localStorage.getItem("templates");
+     if (savedTemplates) {
+       window.templateStore.setState(JSON.parse(savedTemplates));
+     }
+   });
+   ```
+
+4. **Limpieza de Datos**: Al utilizar la función "Eliminar Todo", se limpian tanto las plantillas del Store como del almacenamiento local.
+
+5. **Ventajas**:
+   - No requiere autenticación ni configuración por parte del usuario
+   - Funciona sin conexión a internet
+   - Es transparente para el usuario, sin necesidad de "guardar" manualmente
+   - Mantiene la privacidad del usuario al almacenar los datos localmente
+
+Esta implementación proporciona una experiencia fluida donde las plantillas del usuario persisten entre sesiones sin necesidad de una base de datos externa o un servidor.
+
 ### Clase Template
 
 La clase `Template` es un componente fundamental que encapsula toda la lógica relacionada con las plantillas de mensajes de WhatsApp, proporcionando una implementación orientada a objetos para su gestión y visualización.
@@ -175,3 +234,5 @@ Este estado se utiliza para determinar cómo renderizar las plantillas y qué es
 5. **Notificaciones**: Sistema de notificaciones temporales para confirmar acciones
 6. **Diseño Responsive**: Se adapta a diferentes tamaños de pantalla
 7. **UI Moderna**: Utiliza Tailwind CSS para una interfaz moderna y atractiva
+8. **Recuperación de Plantillas**: Permite recuperar la última plantilla eliminada
+9. **Persistencia Local**: Guarda las plantillas automáticamente en el navegador
