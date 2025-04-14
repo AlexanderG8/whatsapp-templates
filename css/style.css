@@ -16,3 +16,58 @@ body {
 .notification.show {
     transform: translateY(0);
 }
+
+/* Estilos para etiquetas */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 500;
+    color: #4b5563;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+}
+.tag-chip:hover {
+    background-color: #d1d5db;
+}
+.tag-chip .tag-delete {
+    margin-left: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    cursor: pointer;
+}
+.tag-chip.active {
+    background-color: #10b981;
+    color: white;
+}
+.tag-chip.active:hover {
+    background-color: #059669;
+}
+.template-tag {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    background-color: #e5e7eb;
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+.template-tag:hover {
+    background-color: #d1d5db;
+    cursor: pointer;
+}
+.tags-filter-option {
+    transition: all 0.2s ease;
+}
+.tags-filter-option:hover {
+    background-color: #f3f4f6;
+}
+.tags-filter-checkbox {
+    margin-right: 0.5rem;
+}

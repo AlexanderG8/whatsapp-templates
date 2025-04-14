@@ -69,13 +69,13 @@
                 <div class="flex justify-between items-center mb-5">
                     <h3 class="text-lg font-medium text-gray-700">Tus plantillas guardadas</h3>
                     <div class="flex space-x-2">
-                        <button id="recover-template" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed hidden">
+                        <button id="recover-template" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-3 py-1.5 rounded-lg shadow-sm transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed hidden">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                             </svg>
                             Recuperar última plantilla
                         </button>
-                        <button id="reset-templates" class="bg-red-50 hover:bg-red-100 text-red-600 font-medium px-3 py-1.5 rounded-lg shadow-sm transition-all flex items-center text-sm">
+                        <button id="reset-templates" class="bg-red-50 hover:bg-red-100 text-red-600 font-medium px-3 py-1.5 rounded-lg shadow-sm transition-colors text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -83,6 +83,49 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Barra de búsqueda -->
+                <div class="mb-5">
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="search" id="search-templates" class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="Buscar por título, mensaje o hashtags...">
+                        </div>
+                        <div class="relative" id="tags-filter-container">
+                            <button id="tags-filter-button" class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-emerald-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                Filtrar por etiquetas
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div id="tags-filter-dropdown" class="hidden absolute z-10 w-60 bg-white divide-y divide-gray-100 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                <div class="p-3">
+                                    <h6 class="mb-2 text-sm font-medium text-gray-700">Seleccionar etiquetas</h6>
+                                    <ul id="tags-filter-list" class="space-y-2 max-h-40 overflow-y-auto">
+                                        <!-- Aquí se agregarán las etiquetas dinámicamente -->
+                                    </ul>
+                                    <div class="flex justify-between mt-3 pt-3 border-t border-gray-200">
+                                        <button id="clear-tags-filter" class="text-xs text-gray-700 hover:text-gray-900 font-medium">Limpiar filtros</button>
+                                        <div>
+                                            <button id="apply-tags-filter" class="text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-2 py-1 rounded font-medium ml-2">Aplicar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="active-tags-container" class="flex flex-wrap gap-2 mt-2 hidden">
+                        <!-- Aquí se mostrarán las etiquetas activas como chips -->
+                    </div>
+                </div>
+                
                 <ul id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                     <!--Aquí se agregan las plantillas-->
                 </ul>
@@ -99,6 +142,15 @@
                         </svg>
                         Crear plantilla
                     </button>
+                </div>
+
+                <!-- Mensaje cuando no hay resultados de búsqueda -->
+                <div id="no-results" class="hidden text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">No se encontraron resultados</h3>
+                    <p class="text-gray-500">Intenta con otra búsqueda</p>
                 </div>
             </div>
         </section>
@@ -148,6 +200,18 @@
                 <div class="mb-4">
                     <label for="link" class="block text-sm font-medium text-gray-700 mb-1">Link</label>
                     <input type="url" id="link" name="link" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Etiquetas <span class="text-xs text-gray-500">(separadas por comas, máx. 15 caracteres c/u)</span></label>
+                    <div class="relative">
+                        <input type="text" id="tags" name="tags" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="ej: trabajo, personal, urgente">
+                        <div id="tags-suggestions" class="hidden absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-md mt-1 max-h-40 overflow-y-auto">
+                            <!-- Aquí se mostrarán las sugerencias de etiquetas -->
+                        </div>
+                    </div>
+                    <div id="tags-preview" class="flex flex-wrap gap-2 mt-2">
+                        <!-- Aquí se mostrarán las etiquetas como chips -->
+                    </div>
                 </div>
                 <div class="border-t border-gray-200 pt-4 mt-2 flex justify-end space-x-3">
                     <button type="button" id="cancel-template" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-colors">

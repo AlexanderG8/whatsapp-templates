@@ -8,6 +8,20 @@ const notification = document.querySelector("#notification");
 const notificationMessage = document.querySelector("#notification-message");
 const btnResetTemplates = document.querySelector("#reset-templates");
 const btnRecoverTemplate = document.querySelector("#recover-template");
+const searchInput = document.querySelector("#search-templates");
+const noResultsElement = document.querySelector("#no-results");
+
+// Variables para etiquetas
+const tagsInput = document.querySelector("#tags");
+const tagsPreview = document.querySelector("#tags-preview");
+const tagsSuggestions = document.querySelector("#tags-suggestions");
+const tagsFilterButton = document.querySelector("#tags-filter-button");
+const tagsFilterDropdown = document.querySelector("#tags-filter-dropdown");
+const tagsFilterList = document.querySelector("#tags-filter-list");
+const applyTagsFilterBtn = document.querySelector("#apply-tags-filter");
+const clearTagsFilterBtn = document.querySelector("#clear-tags-filter");
+const activeTagsContainer = document.querySelector("#active-tags-container");
+
 
 // Variables para el modal de edición
 const templateModal = document.querySelector("#template-modal");
@@ -39,7 +53,11 @@ const closeResetModalBtn = document.querySelector("#close-reset-modal");
 const appState = {
     viewMode: "grid", // grid o list
     notificationTimeout: null, // Para controlar el timeout de las notificaciones
-    isEditing: false // Para controlar si estamos editando o agregando
+    isEditing: false, // Para controlar si estamos editando o agregando
+    searchTerm: "", // Término de búsqueda para filtrar plantillas
+    activeTagsFilter: [], // Etiquetas seleccionadas para filtrar
+    allTags: [], // Todas las etiquetas disponibles en el sistema
+    currentTags: [] // Etiquetas actualmente seleccionadas en el formulario
 }
 
 btnNewTemplate.addEventListener("click", function () {
@@ -55,6 +73,10 @@ function openAddTemplateModal() {
     // Limpio los inpust
     templateForm.reset();
     templateIndexInput.value = "";
+
+    // Limpiar las etiquetas
+    appState.currentTags = [];
+    renderTagsPreview();
 
     // Mostrar el modal
     templateModal.classList.remove("hidden");
@@ -77,6 +99,10 @@ function openEditTemplateModal(index){
     linkInput.value = template.link;
     templateIndexInput.value = index;
 
+    // Cargar etiquetas de la plantilla
+    appState.currentTags = template.tags || [];
+    renderTagsPreview();
+
     // Mostrar el modal
     templateModal.classList.remove("hidden");
 }
@@ -90,7 +116,7 @@ function closeModal() {
 function openDeleteConfirmModal(index) {
     // Guardar el índice de la plantilla a eliminar
     deleteTemplateIndexInput.value = index;
-    
+
     // Mostrar el modal
     deleteConfirmModal.classList.remove("hidden");
 }
@@ -125,7 +151,7 @@ function updateRecoverButtonState() {
 // Función para manejar la recuperación de la última plantilla eliminada
 function handleRecoverTemplate() {
     const recoveredTemplate = window.templateStore.recoverLastTemplate();
-    
+
     if (recoveredTemplate) {
         showNotification("Plantilla recuperada con éxito");
         updateRecoverButtonState();
@@ -142,16 +168,16 @@ cancelDeleteBtn.addEventListener("click", closeDeleteConfirmModal);
 confirmDeleteBtn.addEventListener("click", function() {
     // Obtener el índice de la plantilla a eliminar
     const index = parseInt(deleteTemplateIndexInput.value);
-    
+
     // Llamar a la función removeTemplate del store
     window.templateStore.removeTemplate(index);
-    
+
     // Mostrar notificación
     showNotification("Plantilla eliminada con éxito");
-    
+
     // Cerrar el modal
     closeDeleteConfirmModal();
-    
+
     // Actualizar el estado del botón de recuperación
     updateRecoverButtonState();
 });
@@ -162,16 +188,16 @@ cancelResetBtn.addEventListener("click", closeResetConfirmModal);
 confirmResetBtn.addEventListener("click", function() {
     // Resetear plantillas
     window.templateStore.resetTemplates();
-    
+
     // Limpiar localStorage
     clearTemplatesStorage();
-    
+
     // Mostrar notificación
     showNotification("Todas las plantillas han sido eliminadas");
-    
+
     // Cerrar el modal
     closeResetConfirmModal();
-    
+
     // Actualizar el estado del botón de recuperación
     updateRecoverButtonState();
 });
@@ -188,19 +214,23 @@ templateForm.addEventListener("submit", function (event){
     const hashTag = "#"+hashTagInput.value;
     const link = linkInput.value;
     const date = new Date().toLocaleDateString();
+    const tags = [...appState.currentTags]; // Copia de las etiquetas actuales
 
     if (appState.isEditing) {
         // Editar plantilla existente
         const index = parseInt(templateIndexInput.value);
-        const updateTemplate = new Template(title, message, hashTag, link, date)
+        const updateTemplate = new Template(title, message, hashTag, link, date, tags);
         window.templateStore.updateTemplate(index, updateTemplate);
         showNotification("Plantilla actualizada con éxito");
     } else {
         // Agregar nueva plantilla
-        const newTemplate = new Template(title, message, hashTag, link, date);
+        const newTemplate = new Template(title, message, hashTag, link, date, tags);
         window.templateStore.addTemplate(newTemplate);
-        showNotification("Plantilla agregada con éxito");
+        showNotification("Plantilla guardada con éxito");
     }
+
+    // Actualizar la lista de todas las etiquetas disponibles
+    updateAllTagsList();
 
     // Cerrar el modal
     closeModal();
@@ -212,15 +242,15 @@ function showNotification(message, duration = 3000) {
     if (appState.notificationTimeout) {
         clearTimeout(appState.notificationTimeout);
     }
-    
+
     // Establecer el mensaje
     notificationMessage.textContent = message;
-    
+
     // Remuevo el hidden
     notification.classList.remove('hidden');
     // Mostrar la notificación
     notification.classList.add('show');
-    
+
     // Ocultar después del tiempo especificado
     appState.notificationTimeout = setTimeout(() => {
         // Remuevo el show
@@ -247,193 +277,176 @@ function resetearPlantillas(){
     openResetConfirmModal();
 }
 
+// Función para normalizar texto (eliminar acentos) para búsquedas
+function normalizeText(text) {
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 // Función para verificar si hay plantillas y mostrar el estado vacío si corresponde
 function checkEmptyState() {
     const templates = window.templateStore.getState();
-    
+
     if (templates.length === 0) {
-        // No hay plantillas, mostrar el estado vacío
-        templatesContainer.classList.add('hidden');
+        // Si no hay plantillas, mostrar el estado vacío
         emptyState.classList.remove('hidden');
+        noResultsElement.classList.add('hidden');
+        return true;
     } else {
-        // Hay plantillas, ocultar el estado vacío
-        templatesContainer.classList.remove('hidden');
+        // Si hay plantillas, ocultar el estado vacío
         emptyState.classList.add('hidden');
+
+        // Aplicar filtros combinados
+        const filteredTemplates = filterTemplates(templates);
+
+        if (filteredTemplates.length === 0) {
+            noResultsElement.classList.remove('hidden');
+        } else {
+            noResultsElement.classList.add('hidden');
+        }
+
+        return false;
     }
 }
 
+// Función para filtrar plantillas según búsqueda y etiquetas
+function filterTemplates(templates) {
+    return templates.filter(template => {
+        // Filtro por término de búsqueda
+        const matchesSearch = !appState.searchTerm || 
+            normalizeText(template.title).includes(normalizeText(appState.searchTerm)) || 
+            normalizeText(template.message).includes(normalizeText(appState.searchTerm)) || 
+            normalizeText(template.hashTag).includes(normalizeText(appState.searchTerm));
+
+        // Filtro por etiquetas
+        const matchesTags = appState.activeTagsFilter.length === 0 || 
+            (template.tags && appState.activeTagsFilter.every(tag => template.tags.includes(tag)));
+
+        return matchesSearch && matchesTags;
+    });
+}
+
 // Función para renderizar las plantillas usando el store
-function renderTemplates(){
+function renderTemplates() {
+    //Limpiamos contenedor
     templatesContainer.innerHTML = "";
 
-    // Trae la lista de templates desde el store
+    //Verificamos si hay plantillas
     const templates = window.templateStore.getState();
-    
-    // Verificar si hay plantillas
-    checkEmptyState();
-    
-    // Si no hay plantillas, no continuar con el renderizado
-    if (templates.length === 0) {
+
+    if (checkEmptyState()) {
         return;
     }
 
-    templates.forEach(function (template, index){
+    // Filtrar plantillas según búsqueda y etiquetas
+    const filteredTemplates = filterTemplates(templates);
+
+    if (filteredTemplates.length === 0) {
+        noResultsElement.classList.remove('hidden');
+        return;
+    } else {
+        noResultsElement.classList.add('hidden');
+    }
+
+    filteredTemplates.forEach(function (template, index){
         //Creo elemento li
         const li = document.createElement('li');
-        
-        // Aplicar estilos según el modo de vista
+
+        // Uso el appState para determinar la vista
         if (appState.viewMode === 'grid') {
-            li.classList.add("bg-white", "p-4", "my-3", "rounded", "shadow-sm", "hover:shadow-md", "transition-shadow", "template-card", "relative");
-        } else { // viewMode === 'list'
-            li.classList.add("bg-white", "p-4", "rounded", "shadow-sm", "hover:shadow-md", "transition-shadow", "flex", "flex-col", "md:flex-row", "md:items-center", "w-full", "template-card", "relative");
+            li.className = 'template-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md';
+
+            // Crea contenido para vista de grilla
+            li.innerHTML = `
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-semibold text-gray-900 truncate w-4/5">${template.title}</h3>
+                        <span class="text-xs text-gray-500">${template.date}</span>
+                    </div>
+                    <p class="text-gray-700 text-sm mb-3 line-clamp-3">${template.message}</p>
+                    <div class="text-xs bg-gray-100 text-gray-600 rounded px-2 py-1 mb-3 inline-block">${template.hashTag}</div>
+                    <div class="template-tags mb-3">
+                        ${template.tags && template.tags.length > 0 ? 
+                            template.tags.map(tag => `<span class="template-tag" data-tag="${tag}">${tag}</span>`).join('') : ''}
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <a href="https://wa.me/?text=${encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link)}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Enviar
+                        </a>
+                        <div class="flex space-x-1">
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleEditTemplate(${templates.indexOf(template)})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleDeleteTemplate(${templates.indexOf(template)})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            li.className = 'template-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md mb-3';
+
+            // Crea contenido para vista de lista
+            li.innerHTML = `
+                <div class="p-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start mb-3">
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-semibold text-gray-900">${template.title}</h3>
+                                <span class="text-xs text-gray-500 ml-3">${template.date}</span>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-3">${template.message}</p>
+                            <div class="text-xs bg-gray-100 text-gray-600 rounded px-2 py-1 mb-3 inline-block">${template.hashTag}</div>
+                            <div class="template-tags mb-3">
+                                ${template.tags && template.tags.length > 0 ? 
+                                    template.tags.map(tag => `<span class="template-tag" data-tag="${tag}">${tag}</span>`).join('') : ''}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 sm:ml-4 mt-3 sm:mt-0">
+                            <a href="https://wa.me/?text=${encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link)}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Enviar
+                            </a>
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleEditTemplate(${templates.indexOf(template)})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </button>
+                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleDeleteTemplate(${templates.indexOf(template)})">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        // Botón de eliminar
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add(
-            "absolute", "top-2", "right-2", 
-            "bg-red-100", "hover:bg-red-200", "text-red-600", 
-            "rounded-full", "p-1", "transition-colors", 
-            "focus:outline-none", "focus:ring-2", "focus:ring-red-400"
-        );
-        deleteButton.setAttribute('aria-label', 'Eliminar plantilla');
-        deleteButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-        `;
-
-        // Añadir el evento click para eliminar
-        deleteButton.addEventListener('click', function(event) {
-            // Evitar que el evento se propague
-            event.stopPropagation();
-            handleDeleteTemplate(index);
-        });
-
-        // Botón de editar
-        const editButton = document.createElement('button');
-        editButton.classList.add(
-            "absolute", "top-2", "right-9", 
-            "bg-emerald-100", "hover:bg-emerald-200", "text-emerald-600", 
-            "rounded-full", "p-1", "transition-colors", 
-            "focus:outline-none", "focus:ring-2", "focus:ring-emerald-400"
-        );
-        editButton.setAttribute('aria-label', 'Editar plantilla');
-        editButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-        `;
-
-        // Añadir el evento click para editar
-        editButton.addEventListener('click', function(event) {
-            // Evitar que el evento se propague
-            event.stopPropagation();
-            handleEditTemplate(index);
-        });
-
-        // Contenedor para información principal (título y mensaje)
-        const mainContent = document.createElement('div');
-        if (appState.viewMode === 'list') {
-            mainContent.classList.add("flex-grow", "md:mr-4");
-        }
-
-        // Creo elemento h3
-        const h3 = document.createElement('h3');
-        h3.classList.add("text-xl", "font-semibold", "text-gray-800", "pr-8"); // Añadir padding-right para dejar espacio al botón de eliminar
-        h3.textContent = template.title;
-
-        // Creo elemento hr
-        const hr = document.createElement("hr");
-        hr.classList.add("block", "my-3", "border-gray-100");
-        if (appState.viewMode === 'list') {
-            hr.classList.add("md:hidden"); // Ocultar en vista de lista en pantallas medianas y grandes
-        }
-
-        // Creo elemento p para mensaje
-        const message = document.createElement("p");
-        message.classList.add("text-md", "text-gray-600");
-        message.textContent = template.message;
-
-        // Creo elemento p para hashtag
-        const hashTag = document.createElement("p");
-        hashTag.classList.add("text-sm", "mt-3", "text-emerald-600", "font-medium");
-        if (appState.viewMode === 'list') {
-            hashTag.classList.add("md:ml-auto"); // Alinear a la derecha en vista de lista
-        }
-        hashTag.textContent = template.hashTag;
-
-        // Crear elemento para el enlace
-        const linkContainer = document.createElement("div");
-        linkContainer.classList.add("mt-2", "truncate");
-        
-        const linkIcon = document.createElement("span");
-        linkIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-        `;
-        
-        const linkText = document.createElement("a");
-        linkText.href = template.link;
-        linkText.target = "_blank";
-        linkText.rel = "noopener noreferrer";
-        linkText.classList.add("text-sm", "text-blue-600", "hover:underline", "truncate");
-        linkText.textContent = template.link;
-        
-        linkContainer.appendChild(linkIcon);
-        linkContainer.appendChild(linkText);
-
-        // Crear elemento para la fecha
-        const dateContainer = document.createElement("div");
-        dateContainer.classList.add("mt-2", "flex", "items-center", "text-gray-500", "text-xs");
-        
-        const dateIcon = document.createElement("span");
-        dateIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-        `;
-        
-        const dateText = document.createElement("span");
-        dateText.textContent = template.date;
-        
-        dateContainer.appendChild(dateIcon);
-        dateContainer.appendChild(dateText);
-
-        // Estructura diferente según el modo de vista
-        if (appState.viewMode === 'grid') {
-            // Agrego los elementos creados en el elemento li
-            li.appendChild(deleteButton); // Agregar el botón de eliminar
-            li.appendChild(editButton); // Agregar el botón de editar
-            li.appendChild(h3);
-            li.appendChild(hr);
-            li.appendChild(message);
-            li.appendChild(hashTag);
-            li.appendChild(linkContainer);
-            li.appendChild(dateContainer);
-        } else { // viewMode === 'list'
-            // Añadir elementos al contenedor principal
-            mainContent.appendChild(h3);
-            mainContent.appendChild(hr);
-            mainContent.appendChild(message);
-            
-            // Crear contenedor para metadata en vista de lista
-            const metaContainer = document.createElement("div");
-            metaContainer.classList.add("flex", "flex-col", "mt-2", "space-y-1");
-            metaContainer.appendChild(linkContainer);
-            metaContainer.appendChild(dateContainer);
-            mainContent.appendChild(metaContainer);
-            
-            // Añadir contenedor principal y hashtag al li
-            li.appendChild(deleteButton); // Agregar el botón de eliminar
-            li.appendChild(editButton); // Agregar el botón de editar
-            li.appendChild(mainContent);
-            li.appendChild(hashTag);
-        }
-
-        //Agrego el elemento li al contenedor
+        // Agregar el elemento a la lista
         templatesContainer.appendChild(li);
+
+        // Añadir event listeners para etiquetas en las tarjetas
+        const templateTags = li.querySelectorAll('.template-tag');
+        templateTags.forEach(tagElement => {
+            tagElement.addEventListener('click', () => {
+                const tag = tagElement.dataset.tag;
+                if (!appState.activeTagsFilter.includes(tag)) {
+                    appState.activeTagsFilter.push(tag);
+                    renderTagsFilterList();
+                    applyTagsFilter();
+                }
+            });
+        });
     });
 }
 
@@ -441,14 +454,14 @@ function renderTemplates(){
 function switchToGridView() {
     appState.viewMode = 'grid';
     templatesContainer.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5';
-    
+
     // Actualizar estilos de los botones
     gridViewButton.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
     gridViewButton.classList.add('bg-emerald-500', 'text-white');
-    
+
     listViewButton.classList.remove('bg-emerald-500', 'text-white');
     listViewButton.classList.add('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
-    
+
     // Re-renderizar plantillas
     renderTemplates();
 }
@@ -457,14 +470,14 @@ function switchToGridView() {
 function switchToListView() {
     appState.viewMode = 'list';
     templatesContainer.className = 'flex flex-col space-y-4';
-    
+
     // Actualizar estilos de los botones
     listViewButton.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
     listViewButton.classList.add('bg-emerald-500', 'text-white');
-    
+
     gridViewButton.classList.remove('bg-emerald-500', 'text-white');
     gridViewButton.classList.add('bg-gray-100', 'hover:bg-gray-200', 'text-gray-700');
-    
+
     // Re-renderizar plantillas
     renderTemplates();
 }
@@ -480,7 +493,253 @@ document.addEventListener("DOMContentLoaded", function() {
     gridViewButton.addEventListener('click', switchToGridView);
     listViewButton.addEventListener('click', switchToListView);
     btnResetTemplates.addEventListener('click', resetearPlantillas);
-    
+
+    // Inicializar el estado del botón de recuperación
+    updateRecoverButtonState();
+});
+
+// Event listener para el input de búsqueda
+searchInput.addEventListener('input', function() {
+    appState.searchTerm = searchInput.value;
+    renderTemplates();
+});
+
+// Event listeners para el campo de etiquetas
+tagsInput.addEventListener('input', function() {
+    const value = tagsInput.value.trim();
+    renderTagsSuggestions(value);
+});
+
+tagsInput.addEventListener('blur', function() {
+    // Pequeño delay para permitir hacer clic en las sugerencias
+    setTimeout(() => {
+        tagsSuggestions.classList.add('hidden');
+    }, 200);
+});
+
+tagsInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const value = tagsInput.value.trim();
+
+        if (value) {
+            // Limite de 15 caracteres para etiquetas
+            if (value.length > 15) {
+                showNotification("Las etiquetas deben tener máximo 15 caracteres", 3000);
+                return;
+            }
+
+            // Evitar duplicados
+            if (!appState.currentTags.includes(value)) {
+                appState.currentTags.push(value);
+                tagsInput.value = '';
+                renderTagsPreview();
+            }
+        }
+    }
+});
+
+// Event listeners para el filtro de etiquetas
+tagsFilterButton.addEventListener('click', function() {
+    tagsFilterDropdown.classList.toggle('hidden');
+    updateAllTagsList();
+});
+
+// Cerrar el menú desplegable al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!tagsFilterButton.contains(e.target) && !tagsFilterDropdown.contains(e.target)) {
+        tagsFilterDropdown.classList.add('hidden');
+    }
+});
+
+applyTagsFilterBtn.addEventListener('click', applyTagsFilter);
+clearTagsFilterBtn.addEventListener('click', clearTagsFilter);
+
+// Función para actualizar la lista de todas las etiquetas disponibles
+function updateAllTagsList() {
+    const templates = window.templateStore.getState();
+    const allTags = new Set();
+
+    templates.forEach(template => {
+        if (template.tags && Array.isArray(template.tags)) {
+            template.tags.forEach(tag => allTags.add(tag));
+        }
+    });
+
+    appState.allTags = [...allTags].sort();
+    renderTagsFilterList();
+}
+
+// Función para crear un chip de etiqueta
+function createTagChip(tag, isRemovable = true, isActive = false, onClick = null) {
+    const chip = document.createElement('span');
+    chip.classList.add('tag-chip');
+    if (isActive) chip.classList.add('active');
+
+    chip.textContent = tag;
+
+    if (isRemovable) {
+        const deleteIcon = document.createElement('span');
+        deleteIcon.innerHTML = '×';
+        deleteIcon.classList.add('tag-delete');
+        deleteIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Eliminar etiqueta del estado
+            const index = appState.currentTags.indexOf(tag);
+            if (index > -1) {
+                appState.currentTags.splice(index, 1);
+                renderTagsPreview();
+            }
+        });
+        chip.appendChild(deleteIcon);
+    }
+
+    if (onClick) {
+        chip.addEventListener('click', onClick);
+    }
+
+    return chip;
+}
+
+// Función para renderizar las etiquetas en el formulario
+function renderTagsPreview() {
+    tagsPreview.innerHTML = '';
+
+    appState.currentTags.forEach(tag => {
+        tagsPreview.appendChild(createTagChip(tag));
+    });
+}
+
+// Función para renderizar la lista de sugerencias de etiquetas
+function renderTagsSuggestions(inputValue) {
+    tagsSuggestions.innerHTML = '';
+
+    if (!inputValue) {
+        tagsSuggestions.classList.add('hidden');
+        return;
+    }
+
+    const normalizedInput = normalizeText(inputValue);
+    const filteredTags = appState.allTags.filter(tag => {
+        return normalizeText(tag).includes(normalizedInput) && 
+               !appState.currentTags.includes(tag);
+    });
+
+    if (filteredTags.length === 0) {
+        tagsSuggestions.classList.add('hidden');
+        return;
+    }
+
+    filteredTags.forEach(tag => {
+        const item = document.createElement('div');
+        item.className = 'px-3 py-2 cursor-pointer hover:bg-gray-100';
+        item.textContent = tag;
+        item.addEventListener('click', () => {
+            if (!appState.currentTags.includes(tag)) {
+                appState.currentTags.push(tag);
+                tagsInput.value = '';
+                renderTagsPreview();
+                tagsSuggestions.classList.add('hidden');
+            }
+        });
+        tagsSuggestions.appendChild(item);
+    });
+
+    tagsSuggestions.classList.remove('hidden');
+}
+
+// Función para renderizar la lista de etiquetas para filtrar
+function renderTagsFilterList() {
+    tagsFilterList.innerHTML = '';
+
+    if (appState.allTags.length === 0) {
+        const noTags = document.createElement('li');
+        noTags.textContent = 'No hay etiquetas disponibles';
+        noTags.className = 'text-sm text-gray-500 italic';
+        tagsFilterList.appendChild(noTags);
+        return;
+    }
+
+    appState.allTags.forEach(tag => {
+        const li = document.createElement('li');
+        li.className = 'tags-filter-option flex items-center px-2 py-1 rounded-md';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `tag-filter-${tag}`;
+        checkbox.className = 'tags-filter-checkbox';
+        checkbox.checked = appState.activeTagsFilter.includes(tag);
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                if (!appState.activeTagsFilter.includes(tag)) {
+                    appState.activeTagsFilter.push(tag);
+                }
+            } else {
+                const index = appState.activeTagsFilter.indexOf(tag);
+                if (index > -1) {
+                    appState.activeTagsFilter.splice(index, 1);
+                }
+            }
+        });
+
+        const label = document.createElement('label');
+        label.htmlFor = `tag-filter-${tag}`;
+        label.textContent = tag;
+        label.className = 'text-sm cursor-pointer flex-grow';
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        tagsFilterList.appendChild(li);
+    });
+}
+
+// Función para renderizar las etiquetas activas como chips
+function renderActiveTagsFilter() {
+    activeTagsContainer.innerHTML = '';
+
+    if (appState.activeTagsFilter.length === 0) {
+        activeTagsContainer.classList.add('hidden');
+        return;
+    }
+
+    activeTagsContainer.classList.remove('hidden');
+
+    // Agregar texto "Filtrando por:"
+    const filteringText = document.createElement('span');
+    filteringText.textContent = 'Filtrando por:';
+    filteringText.className = 'text-sm text-gray-600 mr-2';
+    activeTagsContainer.appendChild(filteringText);
+
+    // Agregar chips
+    appState.activeTagsFilter.forEach(tag => {
+        activeTagsContainer.appendChild(createTagChip(tag, true, true, null));
+    });
+}
+
+// Función para actualizar los filtros de etiquetas
+function applyTagsFilter() {
+    renderActiveTagsFilter();
+    tagsFilterDropdown.classList.add('hidden');
+    renderTemplates();
+}
+
+// Función para limpiar los filtros de etiquetas
+function clearTagsFilter() {
+    appState.activeTagsFilter = [];
+    renderTagsFilterList();
+    renderActiveTagsFilter();
+    tagsFilterDropdown.classList.add('hidden');
+    renderTemplates();
+}
+
+// Inicializar la aplicación
+window.addEventListener("DOMContentLoaded", function(){
+    // Inicializar el store con los templates guardados
+    window.templateStore.initializeStore();
+
+    // Inicializar lista de etiquetas
+    updateAllTagsList();
+
     // Inicializar el estado del botón de recuperación
     updateRecoverButtonState();
 });

@@ -287,6 +287,29 @@ Este estado se utiliza para determinar cómo renderizar las plantillas y qué es
 5. Mantener la funcionalidad de cambio entre vista de grilla y lista durante la búsqueda.
 6. La búsqueda debe ser insensible a mayúsculas/minúsculas y acentos.
 
+### Implementación del HU1
+
+- He completado la implementación de la funcionalidad de búsqueda y filtrado de plantillas según los requerimientos.
+
+**Cambios en el HTML**
+
+He agregado:
+
+- Una barra de búsqueda en la parte superior de la lista de plantillas con un ícono de lupa
+- Un mensaje para cuando no se encuentran resultados de búsqueda
+
+**Cambios en JavaScript**
+
+He implementado:
+
+- Variables para los nuevos elementos del DOM
+- Una nueva propiedad searchTerm en el estado de la aplicación
+- La función normalizeText() para hacer que la búsqueda sea insensible a acentos y mayúsculas/minúsculas
+- Actualización de la función renderTemplates() para filtrar plantillas según el término de búsqueda
+- Actualización de checkEmptyState() para manejar el caso cuando no hay resultados de búsqueda
+- Un event listener que actualiza el término de búsqueda en tiempo real mientras el usuario escribe
+
+
 ### HU2: Categorización de Plantillas con Etiquetas Personalizadas
 
 - Como usuario, quiero poder asignar etiquetas personalizadas a mis plantillas y filtrarlas por estas etiquetas para organizar mejor mi colección según diferentes contextos o usos.
