@@ -11,6 +11,14 @@ const btnRecoverTemplate = document.querySelector("#recover-template");
 const searchInput = document.querySelector("#search-templates");
 const noResultsElement = document.querySelector("#no-results");
 
+// Variables para el modal de envío de mensajes
+const sendMessageModal = document.querySelector("#send-message-modal");
+const sendTemplateIndexInput = document.querySelector("#send-template-index");
+const phoneNumberInput = document.querySelector("#phone-number");
+const closeSendModalBtn = document.querySelector("#close-send-modal");
+const cancelSendBtn = document.querySelector("#cancel-send");
+const confirmSendBtn = document.querySelector("#confirm-send");
+
 // Variables para etiquetas
 const tagsInput = document.querySelector("#tags");
 const tagsPreview = document.querySelector("#tags-preview");
@@ -21,7 +29,6 @@ const tagsFilterList = document.querySelector("#tags-filter-list");
 const applyTagsFilterBtn = document.querySelector("#apply-tags-filter");
 const clearTagsFilterBtn = document.querySelector("#clear-tags-filter");
 const activeTagsContainer = document.querySelector("#active-tags-container");
-
 
 // Variables para el modal de edición
 const templateModal = document.querySelector("#template-modal");
@@ -137,6 +144,43 @@ function closeResetConfirmModal() {
     resetConfirmModal.classList.add("hidden");
 }
 
+// Función para abrir el modal de envío de mensaje
+function openSendMessageModal(index) {
+    // Guardar el índice de la plantilla a enviar
+    sendTemplateIndexInput.value = index;
+    
+    // Limpiar el campo de número de teléfono
+    phoneNumberInput.value = "";
+    
+    // Mostrar el modal
+    sendMessageModal.classList.remove("hidden");
+}
+
+// Función para cerrar el modal de envío de mensaje
+function closeSendMessageModal() {
+    sendMessageModal.classList.add("hidden");
+}
+
+// Función para enviar el mensaje a WhatsApp
+function sendTemplateToWhatsApp(index, phoneNumber) {
+    // Obtener la plantilla
+    const templates = window.templateStore.getState();
+    const template = templates[index];
+    
+    // Formatear el número (eliminar caracteres no numéricos)
+    const formattedNumber = phoneNumber.replace(/\D/g, "");
+    
+    // Construir la URL de WhatsApp
+    const messageText = encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link);
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${messageText}`;
+    
+    // Abrir la URL en una nueva pestaña
+    window.open(whatsappUrl, '_blank');
+    
+    // Mostrar notificación
+    showNotification("Redirigiendo a WhatsApp...");
+}
+
 // Función para actualizar el estado del botón de recuperación
 function updateRecoverButtonState() {
     if (window.templateStore.hasRecoverableTemplate()) {
@@ -234,6 +278,27 @@ templateForm.addEventListener("submit", function (event){
 
     // Cerrar el modal
     closeModal();
+});
+
+// Event listeners para el modal de envío de mensajes
+closeSendModalBtn.addEventListener("click", closeSendMessageModal);
+cancelSendBtn.addEventListener("click", closeSendMessageModal);
+confirmSendBtn.addEventListener("click", function() {
+    // Obtener el índice de la plantilla y el número de teléfono
+    const index = parseInt(sendTemplateIndexInput.value);
+    const phoneNumber = phoneNumberInput.value.trim();
+    
+    // Validar número de teléfono
+    if (!phoneNumber) {
+        showNotification("Por favor ingresa un número de teléfono", 3000);
+        return;
+    }
+    
+    // Enviar mensaje
+    sendTemplateToWhatsApp(index, phoneNumber);
+    
+    // Cerrar el modal
+    closeSendMessageModal();
 });
 
 // Función para mostrar notificaciones temporales
@@ -369,12 +434,12 @@ function renderTemplates() {
                             template.tags.map(tag => `<span class="template-tag" data-tag="${tag}">${tag}</span>`).join('') : ''}
                     </div>
                     <div class="flex justify-between items-center">
-                        <a href="https://wa.me/?text=${encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link)}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
+                        <button onclick="openSendMessageModal(${templates.indexOf(template)})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                             Enviar
-                        </a>
+                        </button>
                         <div class="flex space-x-1">
                             <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleEditTemplate(${templates.indexOf(template)})">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -410,12 +475,12 @@ function renderTemplates() {
                             </div>
                         </div>
                         <div class="flex space-x-2 sm:ml-4 mt-3 sm:mt-0">
-                            <a href="https://wa.me/?text=${encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link)}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
+                            <button onclick="openSendMessageModal(${templates.indexOf(template)})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                                 Enviar
-                            </a>
+                            </button>
                             <button class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded" onclick="handleEditTemplate(${templates.indexOf(template)})">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -743,3 +808,43 @@ window.addEventListener("DOMContentLoaded", function(){
     // Inicializar el estado del botón de recuperación
     updateRecoverButtonState();
 });
+
+// Función para cargar todos los event listeners
+function loadEventListeners() {
+    // Event listeners de modos de vista
+    gridViewButton.addEventListener("click", switchToGridView);
+    listViewButton.addEventListener("click", switchToListView);
+    
+    // Event listeners para búsqueda
+    searchInput.addEventListener("input", function() {
+        appState.searchTerm = this.value.trim();
+        renderTemplates();
+    });
+    
+    // Event listener para reset
+    btnResetTemplates.addEventListener('click', resetearPlantillas);
+    
+    // Event listener para recuperar plantilla
+    btnRecoverTemplate.addEventListener('click', handleRecoverTemplate);
+    
+    // Event listeners para el modal de envío de mensajes
+    closeSendModalBtn.addEventListener("click", closeSendMessageModal);
+    cancelSendBtn.addEventListener("click", closeSendMessageModal);
+    confirmSendBtn.addEventListener("click", function() {
+        // Obtener el índice de la plantilla y el número de teléfono
+        const index = parseInt(sendTemplateIndexInput.value);
+        const phoneNumber = phoneNumberInput.value.trim();
+        
+        // Validar número de teléfono
+        if (!phoneNumber) {
+            showNotification("Por favor ingresa un número de teléfono", 3000);
+            return;
+        }
+        
+        // Enviar mensaje
+        sendTemplateToWhatsApp(index, phoneNumber);
+        
+        // Cerrar el modal
+        closeSendMessageModal();
+    });
+}

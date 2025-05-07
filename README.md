@@ -1,10 +1,101 @@
 # WhatsApp Templates
 
-## Descripción del Proyecto
+<div align="center">
+  <img src="./img/logo.png" alt="WhatsApp Templates Logo" width="150">
+  <h3>Gestiona tus plantillas de mensajes para WhatsApp</h3>
+  <p>Una aplicación web moderna para crear, organizar y enviar mensajes predefinidos a través de WhatsApp</p>
+  
+  [![Made with Tailwind CSS](https://img.shields.io/badge/Made%20with-Tailwind%20CSS-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
+  [![JavaScript](https://img.shields.io/badge/JavaScript-vanilla-yellow?style=flat-square&logo=javascript)](https://developer.mozilla.org/es/docs/Web/JavaScript)
+</div>
 
-Este proyecto implementa una aplicación de gestión de plantillas para WhatsApp, permitiendo visualizar las plantillas en diferentes formatos (grilla o lista).
+## 🚀 Demo
 
-## Documentación Técnica
+¡Prueba la aplicación en vivo! Visita [WhatsApp Templates Demo](https://alexanderg8.github.io/whatsapp-templates/)
+
+## 📋 Tabla de Contenidos
+
+- [Características](#-características)
+- [Cómo Usar](#-cómo-usar)
+- [Capturas de Pantalla](#-capturas-de-pantalla)
+- [Instalación](#-instalación)
+- [Tecnologías](#-tecnologías)
+- [Documentación Técnica](#-documentación-técnica)
+- [Contribuir](#-contribuir)
+- [Licencia](#-licencia)
+- [Contacto](#-contacto)
+
+## ✨ Características
+
+- **Plantillas Personalizadas**: Crea y guarda mensajes predefinidos para enviar rápidamente
+- **Etiquetas y Organización**: Categoriza tus plantillas con etiquetas para encontrarlas fácilmente
+- **Búsqueda Inteligente**: Encuentra tus plantillas por título, contenido o hashtags
+- **Filtrado por Etiquetas**: Filtra plantillas por una o varias etiquetas simultáneamente
+- **Vistas Flexibles**: Alterna entre vista de cuadrícula o lista según tus preferencias
+- **Envío Directo**: Envía mensajes directamente a un número específico sin necesidad de agregarlo a tus contactos
+- **Persistencia Local**: Tus plantillas se guardan automáticamente en tu navegador
+- **Recuperación**: Recupera fácilmente la última plantilla eliminada
+- **Diseño Responsivo**: Funciona perfectamente en dispositivos móviles y de escritorio
+- **Sin Registro**: No requiere creación de cuentas ni almacenamiento en la nube
+
+## 🔍 Cómo Usar
+
+### Crear una nueva plantilla
+
+1. Haz clic en el botón "Agregar Plantilla" en la parte superior de la página
+2. Completa los campos de título, mensaje, hashtags y link (opcional)
+3. Agrega etiquetas para organizar tu plantilla (opcional)
+4. Haz clic en "Guardar"
+
+### Usar una plantilla
+
+1. Localiza la plantilla que deseas usar
+2. Haz clic en el botón "Enviar"
+3. Ingresa el número de teléfono al que quieres enviar el mensaje
+4. Haz clic en "Enviar" y serás redirigido automáticamente a WhatsApp con el mensaje predefinido
+
+### Buscar y filtrar plantillas
+
+- Usa la barra de búsqueda para encontrar plantillas por texto
+- Utiliza el botón "Filtrar por etiquetas" para mostrar solo las plantillas con etiquetas específicas
+- Cambia entre vista de cuadrícula y lista con los botones en la parte superior
+
+## 📱 Capturas de Pantalla
+
+<div align="center">
+  <img src="./img/vista-general.png" alt="Vista General" width="45%">
+  <img src="./img/nueva-plantilla.png" alt="Nueva Plantilla" width="45%">
+</div>
+
+<div align="center">
+  <img src="./img/enviar.png" alt="Enviar mensaje" width="45%">
+  <img src="./img/eliminar.png" alt="Eliminar Plantilla" width="45%">
+</div>
+
+## 💻 Instalación
+
+Para usar WhatsApp Templates localmente:
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/AlexanderG8/whatsapp-templates.git
+
+# Navegar al directorio
+cd whatsapp-templates
+
+# Abrir en tu navegador
+# Puedes usar cualquier servidor local como Live Server en VSCode
+# o simplemente abriendo el archivo index.html en tu navegador
+```
+
+## 🛠️ Tecnologías
+
+- **JavaScript Vanilla**: Sin dependencias de frameworks para un código más ligero
+- **Tailwind CSS**: Para un diseño moderno y responsivo
+- **LocalStorage API**: Para la persistencia de datos en el navegador
+- **WhatsApp Web API**: Para la integración con WhatsApp
+
+## 📚 Documentación Técnica
 
 ### Implementación del Patrón Store
 
@@ -96,16 +187,6 @@ window.templateStore = templateStore; // Accesible desde cualquier parte
 
 5. **API Pública Clara**: El store expone una API bien definida para interactuar con el estado, ocultando los detalles de implementación.
 
-#### Beneficios de la Inmutabilidad
-
-La inmutabilidad implementada en este patrón Store proporciona varios beneficios:
-
-- **Prevención de Efectos Secundarios**: Al no modificar el estado original, se evitan cambios inesperados
-- **Rastreo de Cambios**: Facilita el seguimiento de cómo y cuándo cambia el estado
-- **Rendimiento Optimizado**: Permite comparaciones rápidas entre estados (comparación por referencia)
-- **Facilita Testing**: Hace que las pruebas sean más predecibles al trabajar con estados inmutables
-- **Compatibilidad con Herramientas de Desarrollo**: Permite implementar funcionalidades como time-travel debugging
-
 ### Sincronización y Persistencia de Datos
 
 La aplicación implementa un sistema de persistencia que permite guardar automáticamente las plantillas en el navegador del usuario, haciendo que estén disponibles incluso después de cerrar y volver a abrir la aplicación.
@@ -155,19 +236,41 @@ function clearTemplatesStorage() {
    });
    ```
 
-4. **Limpieza de Datos**: Al utilizar la función "Eliminar Todo", se limpian tanto las plantillas del Store como del almacenamiento local.
+### Envío Directo a Contactos
 
-5. **Ventajas**:
-   - No requiere autenticación ni configuración por parte del usuario
-   - Funciona sin conexión a internet
-   - Es transparente para el usuario, sin necesidad de "guardar" manualmente
-   - Mantiene la privacidad del usuario al almacenar los datos localmente
+Una de las características más útiles es la posibilidad de enviar mensajes directamente a un número de teléfono específico sin necesidad de agregarlo a los contactos.
 
-Esta implementación proporciona una experiencia fluida donde las plantillas del usuario persisten entre sesiones sin necesidad de una base de datos externa o un servidor.
+#### Implementación
+
+```javascript
+// Función para enviar el mensaje a WhatsApp
+function sendTemplateToWhatsApp(index, phoneNumber) {
+    // Obtener la plantilla
+    const templates = window.templateStore.getState();
+    const template = templates[index];
+    
+    // Formatear el número (eliminar caracteres no numéricos)
+    const formattedNumber = phoneNumber.replace(/\D/g, "");
+    
+    // Construir la URL de WhatsApp
+    const messageText = encodeURIComponent(template.message + ' ' + template.hashTag + ' ' + template.link);
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${messageText}`;
+    
+    // Abrir la URL en una nueva pestaña
+    window.open(whatsappUrl, '_blank');
+}
+```
+
+#### Características
+
+1. **Entrada de Número**: Interfaz amigable para ingresar el número del destinatario
+2. **Formateo Automático**: Limpieza del número ingresado para asegurar compatibilidad con la API de WhatsApp
+3. **Composición de URL**: Generación de la URL de WhatsApp con el mensaje y número formateados
+4. **Experiencia Fluida**: Redirección automática a WhatsApp Web o la aplicación nativa con el mensaje pre-cargado
 
 ### Clase Template
 
-La clase `Template` es un componente fundamental que encapsula toda la lógica relacionada con las plantillas de mensajes de WhatsApp, proporcionando una implementación orientada a objetos para su gestión y visualización.
+La clase `Template` encapsula toda la lógica relacionada con las plantillas de mensajes, proporcionando una implementación orientada a objetos para su gestión.
 
 #### Propiedades
 
@@ -177,69 +280,32 @@ La clase `Template` es un componente fundamental que encapsula toda la lógica r
 | `message` | String | Contenido del mensaje de la plantilla |
 | `hashTag` | String | Etiquetas o hashtags asociados a la plantilla |
 | `link` | String | Enlace asociado a la plantilla |
-| `date` | String | Fecha relacionada con la plantilla |
+| `date` | String | Fecha de creación de la plantilla |
+| `tags` | Array | Etiquetas para categorizar la plantilla |
 
-#### Métodos
+## 👥 Contribuir
 
-##### `constructor(title, message, hashTag, link, date)`
+Las contribuciones son bienvenidas y muy apreciadas. Para contribuir:
 
-Crea una nueva instancia de la clase Template con los valores proporcionados para cada propiedad.
+1. Haz un Fork del proyecto
+2. Crea una rama para tu función (`git checkout -b feature/amazing-feature`)
+3. Haz commit de tus cambios (`git commit -m 'Add some amazing feature'`)
+4. Sube tu rama (`git push origin feature/amazing-feature`)
+5. Abre un Pull Request
 
-**Parámetros:**
+## 📄 Licencia
 
-- `title` (String): Título de la plantilla
-- `message` (String): Contenido del mensaje
-- `hashTag` (String): Etiquetas o hashtags asociados
-- `link` (String): Enlace relacionado
-- `date` (String): Fecha asociada
+Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICENSE](LICENSE) para más detalles.
 
-##### `saveTemplate()`
+## 📬 Redes Sociales
 
-Guarda la instancia actual de la plantilla en el array global `templates`. Este método se utiliza para registrar la plantilla en la aplicación y permitir su posterior renderización.
+[Linkedin](https://www.linkedin.com/in/marcello-alexander-gomez-gomez-130587268/) - [Instagram](https://www.instagram.com/xandev008/) - [TikTok](https://www.tiktok.com/@xandev008)
 
-**Retorno:** No retorna valor (void)
+Link del proyecto: [https://github.com/AlexanderG8/whatsapp-templates](https://github.com/AlexanderG8/whatsapp-templates)
 
-##### `render(viewMode = 'grid')`
+---
 
-Renderiza la plantilla en el DOM dentro del contenedor de plantillas. Este método es responsable de crear y estructurar los elementos HTML necesarios para visualizar la plantilla según el modo de vista especificado.
-
-**Parámetros:**
-
-- `viewMode` (String, opcional): Modo de visualización ('grid' o 'list'). El valor por defecto es 'grid'.
-
-**Comportamiento:**
-
-- En modo **grilla** (`grid`): Las plantillas se muestran en un formato de tarjeta vertical con todos los elementos apilados.
-- En modo **lista** (`list`): Las plantillas se muestran en un formato horizontal optimizado para visualización tipo lista, con una distribución de elementos reorganizada para aprovechar mejor el espacio horizontal.
-
-**Funcionalidades:**
-
-- Ajusta las clases CSS y estructura del DOM según el modo de visualización
-- Aplica estilos responsive para adaptarse a diferentes tamaños de pantalla
-- Implementa efectos visuales como sombras y transiciones para mejorar la experiencia de usuario
-- Organiza los elementos de manera óptima según cada modo de visualización
-
-**Retorno:** Retorna el elemento `li` creado para la plantilla
-
-## Estado de la Aplicación
-
-El sistema mantiene un estado global a través del objeto `appState` en `app.js`, que incluye:
-
-- `viewMode`: Modo actual de visualización ('grid' o 'list')
-- `notificationTimeout`: Controla el tiempo de visualización de las notificaciones
-
-Este estado se utiliza para determinar cómo renderizar las plantillas y qué estilos aplicar a los botones de cambio de vista.
-
-## Funcionalidades Implementadas
-
-1. **Vista de Grilla/Lista**: Permite alternar entre visualización de plantillas en formato grilla o lista
-2. **Agregar Plantillas**: Permite crear nuevas plantillas con título, mensaje y hashtags
-3. **Eliminar Plantillas**: Incluye capacidad para eliminar plantillas individualmente
-4. **Estado Vacío**: Muestra un mensaje amigable cuando no hay plantillas
-5. **Notificaciones**: Sistema de notificaciones temporales para confirmar acciones
-6. **Diseño Responsive**: Se adapta a diferentes tamaños de pantalla
-7. **UI Moderna**: Utiliza Tailwind CSS para una interfaz moderna y atractiva
-8. **Recuperación de Plantillas**: Permite recuperar la última plantilla eliminada
-9. **Persistencia Local**: Guarda las plantillas automáticamente en el navegador
-
-## 🔗[Historias de Usuarios Propuestas](historias-propuestas.md) 
+<div align="center">
+  <p>Desarrollado con ❤️ por <a href="https://github.com/AlexanderG8">Xandev</a></p>
+  <p>© 2025 WhatsApp Templates</p>
+</div>
